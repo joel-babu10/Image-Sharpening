@@ -241,11 +241,6 @@ The sharpened video will be saved in `results/`.
 
 
 
-## 📄 License
-
-This project is released under the [MIT License](LICENSE).
-
----
 
 ## 🙋 Contributing
 
