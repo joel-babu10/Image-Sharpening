@@ -122,8 +122,8 @@ python video_sharpen.py --input data/input_video.mp4 --output results/output_vid
 ## 👥 Authors
 
 - **Joel Babu** — Model training, architecture, experiments  
-- **Hridya R Kurup1** — Loss functions, evaluation metrics  
-- **Irene Anna Oommen 2** — Inference pipeline and optimization
+- **Hridya R Kurup** — Loss functions, evaluation metrics  
+- **Irene Anna Oommen ** — Inference pipeline and optimization
 
 ---
 
@@ -156,7 +156,7 @@ You can use your own high-quality images or public datasets. The folder structur
 
 ```
 data/
-├── original/        # High-quality ground truth images
+├── high_res/        # High-quality ground truth images
 └── degraded/        # Blurred versions of the originals (use bicubic/bilinear resize to generate)
 ```
 
@@ -179,7 +179,7 @@ Make sure both folders contain corresponding image names like `0001.png`, `0002.
 This will take time and computational power (GPU recommended).
 
 ```bash
-python main.py --mode train_teacher
+python train_teacher.py
 ```
 
 After training, you’ll get a model saved in:
@@ -195,7 +195,7 @@ checkpoints/teacher_model.pth
 This uses the trained teacher weights for knowledge distillation.
 
 ```bash
-python main.py --mode train_student
+python train_student.py
 ```
 
 You should now have:
@@ -208,19 +208,12 @@ checkpoints/student_model.pth
 
 ### 6️⃣ Test on an Image (Optional)
 
-Write a quick test script or notebook:
+```bash
+python test_student.py
+```
+```
 
-```python
-from models.student_model import StudentUNet
-from PIL import Image
-import torch
-import torchvision.transforms as T
-
-model = StudentUNet().eval()
-model.load_state_dict(torch.load("checkpoints/student_model.pth", map_location="cpu"))
-img = Image.open("data/degraded/0001.png")
-tensor = T.ToTensor()(img).unsqueeze(0)
-output = model(tensor).squeeze().permute(1, 2, 0).detach().numpy()
+python test_teacher.py
 ```
 
 ---
