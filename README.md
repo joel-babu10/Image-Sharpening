@@ -127,6 +127,127 @@ python video_sharpen.py --input data/input_video.mp4 --output results/output_vid
 
 ---
 
+## 🧾 Step-by-Step Guide
+
+This section outlines how to go from setup to results, even if you're new to machine learning.
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/joel-babu10/image-sharpening-kd.git
+cd image-sharpening-kd
+```
+
+### 2️⃣ Install Required Libraries
+
+Make sure Python 3.8+ is installed, then run:
+
+```bash
+pip install -r requirements.txt
+```
+
+> Optionally, use a virtual environment for isolation: `python -m venv venv && source venv/bin/activate`
+
+---
+
+### 3️⃣ Prepare the Dataset
+
+You can use your own high-quality images or public datasets. The folder structure should look like this:
+
+```
+data/
+├── original/        # High-quality ground truth images
+└── degraded/        # Blurred versions of the originals (use bicubic/bilinear resize to generate)
+```
+
+To generate blurred images:
+
+```python
+# Example using OpenCV (in a custom script or notebook)
+import cv2
+img = cv2.imread("data/original/0001.png")
+degraded = cv2.resize(cv2.resize(img, (img.shape[1]//2, img.shape[0]//2)), (img.shape[1], img.shape[0]))
+cv2.imwrite("data/degraded/0001.png", degraded)
+```
+
+Make sure both folders contain corresponding image names like `0001.png`, `0002.png`, etc.
+
+---
+
+### 4️⃣ Train the Teacher Model
+
+This will take time and computational power (GPU recommended).
+
+```bash
+python main.py --mode train_teacher
+```
+
+After training, you’ll get a model saved in:
+
+```
+checkpoints/teacher_model.pth
+```
+
+---
+
+### 5️⃣ Train the Student Model
+
+This uses the trained teacher weights for knowledge distillation.
+
+```bash
+python main.py --mode train_student
+```
+
+You should now have:
+
+```
+checkpoints/student_model.pth
+```
+
+---
+
+### 6️⃣ Test on an Image (Optional)
+
+Write a quick test script or notebook:
+
+```python
+from models.student_model import StudentUNet
+from PIL import Image
+import torch
+import torchvision.transforms as T
+
+model = StudentUNet().eval()
+model.load_state_dict(torch.load("checkpoints/student_model.pth", map_location="cpu"))
+img = Image.open("data/degraded/0001.png")
+tensor = T.ToTensor()(img).unsqueeze(0)
+output = model(tensor).squeeze().permute(1, 2, 0).detach().numpy()
+```
+
+---
+
+### 7️⃣ Test on a Video
+
+To sharpen a blurry video (MP4):
+
+```bash
+python video_sharpen.py --input data/input_video.mp4 --output results/output_video.mp4
+```
+
+The sharpened video will be saved in `results/`.
+
+---
+
+### ✅ Tips for Best Results
+
+- Use consistent image dimensions (e.g., 512×512 or 1080p) for training
+- Normalize images to [0, 1] if modifying dataset pipeline
+- Use GPU for faster training (`torch.device('cuda')`)
+- If model outputs are white/black, check activation (use `sigmoid` or clamp output)
+
+---
+
+
+
 ## 📄 License
 
 This project is released under the [MIT License](LICENSE).
