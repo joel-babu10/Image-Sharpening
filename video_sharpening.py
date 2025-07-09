@@ -1,18 +1,25 @@
 import cv2
 import torch
 import numpy as np
+import time
 from torchvision import transforms
 from tqdm import tqdm
 from models.student_model import StudentUNet  # Match filename and class name
+from torch import amp  # Updated import for autocast
 
 # ----------- CONFIGURATION ------------
 video_input_path = 'data/input_video.mp4'
 video_output_path = 'results/sharpened_output.mp4'
-model_path = 'checkpoints/student_epoch_20.pth'
+model_path = 'checkpoints/best_student_unet.pth'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("🖥️  Using device:", device)
 resize_dim = (1920, 1080)  # Ensure matches training input size
 show_preview = False  # Set True to show live preview
 # --------------------------------------
+
+# Performance tweaks
+cv2.setNumThreads(4)
+torch.backends.cudnn.benchmark = True
 
 # Load model
 model = StudentUNet().to(device)
@@ -37,7 +44,9 @@ out = cv2.VideoWriter(video_output_path, fourcc, fps, resize_dim)
 
 print(f"🔧 Processing {frame_count} frames at {fps} FPS...")
 
-with torch.no_grad():
+start_time = time.time()
+
+with torch.inference_mode():
     for _ in tqdm(range(frame_count), desc="Sharpening Video"):
         ret, frame = cap.read()
         if not ret:
@@ -48,10 +57,12 @@ with torch.no_grad():
 
         # BGR -> RGB
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        tensor = to_tensor(img_rgb).unsqueeze(0).to(device)
+        tensor = to_tensor(img_rgb).unsqueeze(0).to(device).contiguous()
 
-        # Inference
-        sharpened = model(tensor)
+        # Inference with updated autocast usage
+        with amp.autocast(device_type='cuda'):
+            sharpened = model(tensor)
+
         sharpened = torch.clamp(sharpened, 0.0, 1.0)
 
         # Convert to image
@@ -73,4 +84,6 @@ out.release()
 if show_preview:
     cv2.destroyAllWindows()
 
+elapsed = time.time() - start_time
 print(f"✅ Sharpened video saved at: {video_output_path}")
+aaaaa
