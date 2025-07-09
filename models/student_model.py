@@ -1,4 +1,3 @@
-# student_model.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -70,10 +69,10 @@ class StudentUNet(nn.Module):
         self.middle = ConvBlock(64, 128)
 
         self.up1 = UpsampleBlock(128, 64)
-        self.decoder1 = ConvBlock(128, 64)
+        self.decoder1 = ConvBlock(128, 64)  # 64 (up) + 64 (enc2)
 
         self.up2 = UpsampleBlock(64, 32)
-        self.decoder2 = ConvBlock(64, 32)
+        self.decoder2 = ConvBlock(64, 32)  # 32 (up) + 32 (enc1)
 
         self.out_conv = nn.Sequential(
             nn.Conv2d(32, out_channels, kernel_size=1),
@@ -81,10 +80,15 @@ class StudentUNet(nn.Module):
         )
 
     def forward(self, x):
-        enc1 = self.encoder1(x)
-        enc2 = self.encoder2(self.pool1(enc1))
-        mid = self.middle(self.pool2(enc2))
+        enc1 = self.encoder1(x)             # [B,32,H,W]
+        enc2 = self.encoder2(self.pool1(enc1))  # [B,64,H/2,W/2]
+        mid = self.middle(self.pool2(enc2))      # [B,128,H/4,W/4]
 
-        dec1 = self.decoder1(torch.cat([self.up1(mid), enc2], dim=1))
-        dec2 = self.decoder2(torch.cat([self.up2(dec1), enc1], dim=1))
-        return self.out_conv(dec2)
+        up1 = self.up1(mid)                 # [B,64,H/2,W/2]
+        dec1 = self.decoder1(torch.cat([up1, enc2], dim=1))  # concat along channel dim
+
+        up2 = self.up2(dec1)                # [B,32,H,W]
+        dec2 = self.decoder2(torch.cat([up2, enc1], dim=1))
+
+        out = self.out_conv(dec2)
+        return out
