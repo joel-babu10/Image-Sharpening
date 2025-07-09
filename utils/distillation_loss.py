@@ -21,6 +21,7 @@ class PerceptualLoss(nn.Module):
         for param in vgg.parameters():
             param.requires_grad = False
         self.vgg = vgg
+        self.vgg.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))  # ✅ Device fix
 
     def forward(self, student_out, teacher_out):
         s = self.vgg(self._normalize(student_out))
@@ -62,6 +63,9 @@ class EdgeLoss(nn.Module):
         self.l1 = nn.L1Loss()
 
     def forward(self, student_out, target_hr):
+        # ✅ Ensure edge kernel is on the same device as the input
+        self.edge_kernel = self.edge_kernel.to(student_out.device)
+
         edge_student = self.edge_kernel(student_out)
         edge_target = self.edge_kernel(target_hr)
         return self.l1(edge_student, edge_target)
