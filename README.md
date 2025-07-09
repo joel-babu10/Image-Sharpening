@@ -40,6 +40,17 @@ A lightweight, real-time image sharpening system designed for video conferencing
 - ✅ Clean training/inference pipeline
 
 ---
+## 🧰 Model & System Configuration
+
+| Component        | Description                          |
+|------------------|--------------------------------------|
+| 🧠 Teacher Model | Restormer                            |
+| 🧠 Student Model | UNet / ResUNetLite (KD trained)       |
+| 🖥️ Device         | NVIDIA GPU (e.g., RTX 3060)          |
+| 🧪 Framework      | PyTorch 2.0, torchvision, OpenCV     |
+| 🖼️ Resolution     | 1920×1080 (default), supports others |
+| 💾 RAM            | 16 GB (minimum recommended)          |
+| 🧮 OS             | Windows 10 / Ubuntu 20+              |
 
 ## 🛠️ Installation
 
