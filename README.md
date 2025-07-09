@@ -123,7 +123,7 @@ python video_sharpen.py --input data/input_video.mp4 --output results/output_vid
 
 - **Joel Babu** — Model training, architecture, experiments  
 - **Hridya R Kurup** — Loss functions, evaluation metrics  
-- **Irene Anna Oommen ** — Inference pipeline and optimization
+- **Irene Anna Oommen** — Inference pipeline and optimization
 
 ---
 
